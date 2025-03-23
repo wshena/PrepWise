@@ -38,7 +38,7 @@ export async function createFeedback(params: CreateFeedbackParams) {
         "You are a professional interviewer analyzing a mock interview. Your task is to evaluate the candidate based on structured categories",
     });
 
-    const feedback = {
+    const feedback = await db.collection('feedback').add({
       interviewId: interviewId,
       userId: userId,
       totalScore: object.totalScore,
@@ -47,19 +47,9 @@ export async function createFeedback(params: CreateFeedbackParams) {
       areasForImprovement: object.areasForImprovement,
       finalAssessment: object.finalAssessment,
       createdAt: new Date().toISOString(),
-    };
+    })
 
-    let feedbackRef;
-
-    if (feedbackId) {
-      feedbackRef = db.collection("feedback").doc(feedbackId);
-    } else {
-      feedbackRef = db.collection("feedback").doc();
-    }
-
-    await feedbackRef.set(feedback);
-
-    return { success: true, feedbackId: feedbackRef.id };
+    return { success: true, feedbackId: feedback.id };
   } catch (error) {
     console.error("Error saving feedback:", error);
     return { success: false };
@@ -77,39 +67,20 @@ export async function getFeedbackByInterviewId(
 ): Promise<Feedback | null> {
   const { interviewId, userId } = params;
 
-  const querySnapshot = await db
+  const feedback = await db
     .collection("feedback")
     .where("interviewId", "==", interviewId)
     .where("userId", "==", userId)
     .limit(1)
     .get();
 
-  if (querySnapshot.empty) return null;
+  if (feedback.empty) return null;
 
-  const feedbackDoc = querySnapshot.docs[0];
+  const feedbackDoc = feedback.docs[0];
   return { id: feedbackDoc.id, ...feedbackDoc.data() } as Feedback;
 }
 
-export async function getLatestInterviews(
-  params: GetLatestInterviewsParams
-): Promise<Interview[] | null> {
-  const { userId, limit = 20 } = params;
-
-  const interviews = await db
-    .collection("interviews")
-    .orderBy("createdAt", "desc")
-    .where("finalized", "==", true)
-    .where("userId", "!=", userId)
-    .limit(limit)
-    .get();
-
-  return interviews.docs.map((doc) => ({
-    id: doc.id,
-    ...doc.data(),
-  })) as Interview[];
-}
-
-export async function getInterviewsByUserId(
+export async function getInterviewByUserId(
   userId: string
 ): Promise<Interview[] | null> {
   const interviews = await db
@@ -122,4 +93,21 @@ export async function getInterviewsByUserId(
     id: doc.id,
     ...doc.data(),
   })) as Interview[];
+}
+
+export async function getLatestInterviews(params:GetLatestInterviewsParams): Promise<Interview[] | null> {
+  const {userId, limit = 20} = params;
+
+  const interviews = await db
+    .collection('interviews')
+    .orderBy('createdAt', 'desc')
+    .where('finalized', '==', true)
+    .where('userId', '!=', userId)
+    .limit(limit)
+    .get();
+
+  return interviews.docs.map((doc) => ({
+    id: doc.id,
+    ...doc.data()
+  })) as Interview[]
 }
