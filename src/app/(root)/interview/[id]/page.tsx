@@ -29,7 +29,7 @@ const page = async ({params}:any) => {
         <p className='bg-dark-200 px-4 py-2 rounded-lg h-fit capitalize'>{interview.type}</p>
       </div> 
 
-      <Agent userName={user?.name!} interviewId={id} type='interview' questions={interview.questions} />
+      <Agent userName={user?.name! || ''} userId={user?.id} interviewId={id} type='interview' questions={interview.questions} />
     </>
   )
 }
