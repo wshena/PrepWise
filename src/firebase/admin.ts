@@ -1,12 +1,13 @@
 import { cert, getApps, initializeApp } from 'firebase-admin/app';
+import admin from 'firebase-admin'
 import { getAuth } from 'firebase-admin/auth';
 import { getFirestore } from '@firebase/firestore'
 
 const initFirebaseAdmin = () => {
   const apps = getApps();
 
-  if (!apps.length) {
-    initializeApp({
+  if (!admin.apps.length) {
+    admin.initializeApp({
       credential: cert({
         projectId: process.env.FIREBASE_PROJECT_ID,
         clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
@@ -17,7 +18,7 @@ const initFirebaseAdmin = () => {
 
   return {
     auth: getAuth(),
-    db: getFirestore()
+    db: admin.firestore()
   }
 }
 
